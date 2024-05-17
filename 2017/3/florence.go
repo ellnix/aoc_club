@@ -63,7 +63,7 @@ func roundToInt(x float64) int {
 */
 // maybe we could use recursion, with memoization.
 // there is a pattern so look for that.
-// lets use issac's method of using hashmaps as the matrix
+// lets use isaac's method of using hashmaps as the matrix
 
 type direction int
 
