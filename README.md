@@ -9,3 +9,4 @@ The solutions repository for a private Advent of Code club made of members of th
 |----------------------|-----------------------------------------------------------------------------------------------------|
 | ellnix               | https://github.com/ellnix/aoc2017                                                                   |
 | IsaacG               | https://github.com/IsaacG/Advent-of-Code/tree/main/2017                                             |
+| clechasseur          | https://github.com/clechasseur/adventofcode2017_rs                                                  |
