@@ -1,3 +1,8 @@
+/*
+This code is a combination of Part 1 and Part 2 files, discussed with ChatGPT. 
+I'm sharing it because I found the use of bool flags to be excellent.
+*/
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
