@@ -42,5 +42,5 @@ func solve(input string) (score int, garbChar int) {
 			insideGarbage = true
 		}
 	}
-	return
+	return score, garbChar
 }
