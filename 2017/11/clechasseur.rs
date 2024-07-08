@@ -1,9 +1,10 @@
 use std::iter::successors;
 
+use itertools::Itertools;
 use num::Zero;
-use strum::{EnumProperty, EnumString};
+use strum::EnumString;
 
-use crate::helpers::pt::Pt;
+use crate::helpers::pt::{manhattan, Pt};
 use crate::input::day_11::INPUT;
 
 pub fn part_1() -> usize {
@@ -11,7 +12,11 @@ pub fn part_1() -> usize {
 }
 
 pub fn part_2() -> usize {
-    child_path().map(distance_to).max().unwrap()
+    child_path()
+        .sorted_by_key(|&pt| -manhattan(Pt::zero(), pt))
+        .map(distance_to)
+        .next()
+        .unwrap()
 }
 
 fn child_path() -> impl Iterator<Item = Pt<isize>> {
@@ -42,27 +47,26 @@ fn path_to(goal: Pt<isize>) -> impl Iterator<Item = Pt<isize>> {
     })
 }
 
-#[derive(Debug, Copy, Clone, EnumProperty, EnumString)]
+#[derive(Debug, Copy, Clone, EnumString)]
 #[strum(serialize_all = "snake_case")]
 enum HexDirection {
-    #[strum(props(displacement = "(-1, 1)"))]
     NW,
-    #[strum(props(displacement = "(0, 2)"))]
     N,
-    #[strum(props(displacement = "(1, 1)"))]
     NE,
-    #[strum(props(displacement = "(1, -1)"))]
     SE,
-    #[strum(props(displacement = "(0, -2)"))]
     S,
-    #[strum(props(displacement = "(-1, -1)"))]
     SW,
 }
 
 impl HexDirection {
     fn displacement(&self) -> Pt<isize> {
-        // Note: here, `parse` calls `impl FromStr for Pt`, which
-        // is implemented as parsing points in format `(x, y)`.
-        self.get_str("displacement").unwrap().parse().unwrap()
+        match self {
+            HexDirection::NW => Pt::new(-1, 1),
+            HexDirection::N => Pt::new(0, 2),
+            HexDirection::NE => Pt::new(1, 1),
+            HexDirection::SE => Pt::new(1, -1),
+            HexDirection::S => Pt::new(0, -2),
+            HexDirection::SW => Pt::new(-1, -1),
+        }
     }
 }
