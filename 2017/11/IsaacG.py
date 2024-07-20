@@ -21,6 +21,6 @@ def solver(self, parsed_input: str, part_one: bool) -> int:
 
     for direction in parsed_input.split(","):
         current += offsets[direction]
-        farthest = max(farthest, axial_distance())
+        farthest = max(farthest, axial_distance(current))
 
-    return axial_distance() if part_one else farthest
+    return axial_distance(current) if part_one else farthest
