@@ -6,6 +6,9 @@ PARAMETERIZED_INPUTS = [True, False]
 INPUT_PARSER = aoc.parse_ints_per_line
 
 def solver(parsed_input: list[list[int]], part_one: bool) -> int:
+    ranges: dict[int, int] = dict(sorted(parsed_input))  # type: ignore
+    intervals = {depth: (range_ - 1) * 2 for depth, range_ in ranges.items()}
+
     # Part one: sum(range * depth) for each sensor that would catch us (i.e. position == 0).
     if part_one:
         return sum(
