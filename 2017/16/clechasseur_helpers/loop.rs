@@ -1,50 +1,42 @@
-use std::collections::HashMap;
-use std::hash::Hash;
+use itertools::Itertools;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Loop<T> {
     pub start: usize,
-    pub end_exclusive: usize,
-    pub duplicate: T,
+    pub elements: Vec<T>,
 }
 
 impl<T> Loop<T> {
-    pub fn new(start: usize, end_exclusive: usize, duplicate: T) -> Self {
-        Self { start, end_exclusive, duplicate }
+    pub fn new(start: usize, elements: Vec<T>) -> Self {
+        Self { start, elements }
     }
 
     pub fn len(&self) -> usize {
-        self.end_exclusive - self.start
+        self.elements.len()
+    }
+
+    pub fn last_from_total(&self, total_count: usize) -> &T {
+        &self.elements[total_count % self.len()]
     }
 }
 
 impl<T> Loop<T>
 where
-    T: Eq + Hash,
+    T: Eq,
 {
     pub fn find<I>(seq: I) -> Option<Self>
     where
         I: Iterator<Item = T>,
     {
-        let mut seen = HashMap::new();
+        let mut elements = Vec::new();
 
-        for (i, v) in seq.enumerate() {
-            match seen.get(&v) {
-                Some(&start) => return Some(Self::new(start, i, v)),
-                None => {
-                    seen.insert(v, i);
-                },
+        for v in seq {
+            match elements.iter().find_position(|&lv| *lv == v) {
+                Some((start, _)) => return Some(Self::new(start, elements)),
+                None => elements.push(v),
             }
         }
 
         None
     }
 }
-
-impl<T> PartialEq for Loop<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.start == other.start && self.end_exclusive == other.end_exclusive
-    }
-}
-
-impl<T> Eq for Loop<T> {}
