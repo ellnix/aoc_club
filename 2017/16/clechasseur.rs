@@ -8,43 +8,19 @@ use crate::helpers::r#loop::Loop;
 use crate::input::day_16::INPUT;
 
 pub fn part_1() -> String {
-    moves()
-        .into_iter()
-        .fold(initial_programs(), |programs, mv| mv.apply(programs))
-        .into_iter()
-        .collect()
+    dance(&moves(), initial_programs()).to_string_please()
 }
 
 pub fn part_2() -> String {
-    let fake_times = 1_000_000_000usize;
     let moves = moves();
-    let num_moves = moves.len();
+    let fake_times = 1_000_000_000usize;
 
-    let dances = moves
-        .clone()
-        .into_iter()
-        .cycle()
-        .take(num_moves * fake_times)
-        .chunks(num_moves);
-    let mut dances = dances.into_iter();
+    let dances =
+        successors(Some(initial_programs()), |programs| Some(dance(&moves, programs.clone())))
+            .take(fake_times);
 
-    let dance_results = successors(Some(initial_programs()), move |programs| match dances.next() {
-        Some(dance) => {
-            let programs = dance.fold(programs.clone(), |programs, mv| mv.apply(programs));
-            Some(programs)
-        },
-        None => None,
-    });
-
-    let looop = Loop::find(dance_results).expect("no loop detected!");
-    let real_times = (fake_times - looop.start) % looop.len();
-    moves
-        .into_iter()
-        .cycle()
-        .take(num_moves * real_times)
-        .fold(looop.duplicate, |programs, mv| mv.apply(programs))
-        .into_iter()
-        .collect()
+    let r#loop = Loop::find(dances).expect("no loop detected!");
+    r#loop.last_from_total(fake_times).to_string_please()
 }
 
 fn initial_programs() -> Vec<char> {
@@ -53,6 +29,22 @@ fn initial_programs() -> Vec<char> {
 
 fn moves() -> Vec<Move> {
     INPUT.split(',').map(|s| s.parse().unwrap()).collect_vec()
+}
+
+fn dance(moves: &[Move], programs: Vec<char>) -> Vec<char> {
+    moves
+        .iter()
+        .fold(programs, |programs, mv| mv.apply(programs))
+}
+
+trait ToStringPlease {
+    fn to_string_please(&self) -> String;
+}
+
+impl ToStringPlease for Vec<char> {
+    fn to_string_please(&self) -> String {
+        self.iter().collect()
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
