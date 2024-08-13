@@ -1,53 +1,25 @@
-use std::iter::successors;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 
 use anyhow::{anyhow, Context};
 use itertools::Itertools;
 
-use crate::helpers::r#loop::Loop;
+use crate::helpers::looping::LoopingItertools;
 use crate::input::day_16::INPUT;
 
 pub fn part_1() -> String {
-    dance(&moves(), initial_programs()).to_string_please()
+    Dances::default().next().unwrap().to_string()
 }
 
 pub fn part_2() -> String {
-    let moves = moves();
-    let fake_times = 1_000_000_000usize;
-
-    let dances =
-        successors(Some(initial_programs()), |programs| Some(dance(&moves, programs.clone())))
-            .take(fake_times);
-
-    let r#loop = Loop::find(dances).expect("no loop detected!");
-    r#loop.last_from_total(fake_times).to_string_please()
+    Dances::default()
+        .looping(1_000_000_000)
+        .last()
+        .unwrap()
+        .to_string()
 }
 
-fn initial_programs() -> Vec<char> {
-    ('a'..='p').collect_vec()
-}
-
-fn moves() -> Vec<Move> {
-    INPUT.split(',').map(|s| s.parse().unwrap()).collect_vec()
-}
-
-fn dance(moves: &[Move], programs: Vec<char>) -> Vec<char> {
-    moves
-        .iter()
-        .fold(programs, |programs, mv| mv.apply(programs))
-}
-
-trait ToStringPlease {
-    fn to_string_please(&self) -> String;
-}
-
-impl ToStringPlease for Vec<char> {
-    fn to_string_please(&self) -> String {
-        self.iter().collect()
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum Move {
     Spin(usize),
     Exchange(usize, usize),
@@ -101,5 +73,51 @@ impl FromStr for Move {
             },
             None => Err(anyhow!("empty move string")),
         }
+    }
+}
+
+fn moves() -> Vec<Move> {
+    INPUT.split(',').map(|s| s.parse().unwrap()).collect_vec()
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct Programs(Vec<char>);
+
+impl Programs {
+    pub fn dance(self, moves: &[Move]) -> Self {
+        Self(moves.iter().fold(self.0, |ps, mv| mv.apply(ps)))
+    }
+}
+
+impl Default for Programs {
+    fn default() -> Self {
+        Self(('a'..='p').collect_vec())
+    }
+}
+
+impl Display for Programs {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.iter().collect::<String>())
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Dances {
+    moves: Vec<Move>,
+    programs: Option<Programs>,
+}
+
+impl Default for Dances {
+    fn default() -> Self {
+        Self { moves: moves(), programs: Some(Programs::default()) }
+    }
+}
+
+impl Iterator for Dances {
+    type Item = Programs;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.programs = Some(self.programs.take()?.dance(&self.moves));
+        self.programs.clone()
     }
 }
