@@ -1,0 +1,28 @@
+#!/usr/bin/env ys-0
+source <(curl '-s' 'https://yamlscript.org/run-ys') "$@" :
+
+load: '../../lib/ingydotnet.ys'
+data =: aoc/fetch(2017 19)
+
+defn main():
+  alpha =: \\A .. \\Z
+
+  net =: data
+  wid =: net.str/index-of("\n") + 1
+  beg =: net.str/index-of('|')
+
+  say:
+    loop pos beg, dir wid, got '', num 0:
+      num =: num.++
+      chr =: net.$pos
+      got =: chr.in?(alpha).if("$got$chr" got)
+      nxt =: nth(net (pos + dir))
+      dir =:
+        if chr == \\+:
+          if abs(dir) == 1:
+            if \\space == nth(net (pos + wid)): (0 - wid) wid
+            if \\space == nth(net pos.++): -1 1
+          else: dir
+      if chr.in?(alpha) && (nxt == \\space):
+        vector: got num
+        recur: (pos + dir), dir, got, num
