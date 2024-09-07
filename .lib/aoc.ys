@@ -1,0 +1,15 @@
+!yamlscript/v0
+
+ns: aoc
+
+defn fetch(year, day):
+  cache =: "/tmp/aoc-$year-$day"
+  when-not fs-e(cache):
+    when-not ENV.AOC_TOKEN:
+      die: "You need to set the 'AOC_TOKEN' variable"
+    url =: "http://adventofcode.com/$year/day/$day/input"
+    cookie =: "session=$(ENV.AOC_TOKEN)"
+    data =:
+      http/get(url {:headers {'cookie' cookie}}).body
+    spit cache: data
+  slurp: cache
