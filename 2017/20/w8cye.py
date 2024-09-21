@@ -23,9 +23,6 @@ class Vector:
         self.update_distance()
         return self
 
-    def distance_to(self, other: Self) -> int:
-        return abs(self.x - other.x) + abs(self.y - other.y) + abs(self.z - other.z)
-
     def update_distance(self) -> None:
         self.distance = abs(self.x) + abs(self.y) + abs(self.z)
 
