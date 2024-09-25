@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::str::FromStr;
 
 use strum::{EnumCount, FromRepr};
@@ -25,7 +24,7 @@ fn infections_after(bursts: usize, evolved: bool) -> usize {
     state.infections
 }
 
-type Node = Pt<isize>;
+type Node = Pt;
 
 #[repr(usize)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, FromRepr, EnumCount)]
@@ -45,17 +44,38 @@ impl NodeState {
 }
 
 #[derive(Debug)]
-struct Cluster(HashMap<Node, NodeState>);
+struct Cluster(Vec<NodeState>);
 
 impl Cluster {
+    pub fn new() -> Self {
+        let mut nodes = Vec::new();
+        nodes.resize(1_000 * 1_000, NodeState::Clean);
+        Self(nodes)
+    }
+
     pub fn get_state(&self, node: &Node) -> NodeState {
-        self.0.get(node).copied().unwrap_or(NodeState::Clean)
+        self.0
+            .get(Self::index(node))
+            .copied()
+            .unwrap_or(NodeState::Clean)
     }
 
     pub fn modify_state(&mut self, node: &Node, evolved: bool) -> NodeState {
         let next_state = self.get_state(node).next(evolved);
-        self.0.insert(*node, next_state);
+        self.set_state(node, next_state);
         next_state
+    }
+
+    fn index(node: &Node) -> usize {
+        ((node.x + 500) * 1_000 + node.y + 500) as usize
+    }
+
+    fn set_state(&mut self, node: &Node, state: NodeState) {
+        let state_ref = self
+            .0
+            .get_mut(Self::index(node))
+            .expect("cluster size is not big enough for puzzle");
+        *state_ref = state;
     }
 }
 
@@ -63,18 +83,19 @@ impl FromStr for Cluster {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(
-            s.lines()
-                .rev() // It's opposite day
+        let mut cluster = Self::new();
+
+        s.lines().enumerate().for_each(|(y, row)| {
+            row.bytes()
                 .enumerate()
-                .flat_map(|(y, row)| {
-                    row.bytes()
-                        .enumerate()
-                        .filter(|&(_, node)| node == b'#')
-                        .map(move |(x, _)| (Node::new(x as isize, y as isize), NodeState::Infected))
-                })
-                .collect(),
-        ))
+                .filter(|&(_, node)| node == b'#')
+                .for_each(|(x, _)| {
+                    let node = Node::new(x as i64, y as i64);
+                    cluster.set_state(&node, NodeState::Infected);
+                });
+        });
+
+        Ok(cluster)
     }
 }
 
@@ -84,7 +105,7 @@ impl Default for Cluster {
     }
 }
 
-type Carrier = Turtle<isize>;
+type Carrier = Turtle;
 
 #[derive(Debug)]
 struct State {
